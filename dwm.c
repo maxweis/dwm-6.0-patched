@@ -24,6 +24,7 @@
 #include <locale.h>
 #include <stdarg.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1252,6 +1253,7 @@ maprequest(XEvent *e) {
 void
 monocle(Monitor *m) {
 	unsigned int n = 0;
+  bool remove_border = false;
 	Client *c;
 
 	for(c = m->clients; c; c = c->next)
@@ -1259,8 +1261,16 @@ monocle(Monitor *m) {
 			n++;
 	if(n > 0) /* override layout symbol */
 		snprintf(m->ltsymbol, sizeof m->ltsymbol, "[%d]", n);
-	for(c = nexttiled(m->clients); c; c = nexttiled(c->next))
+	for(c = nexttiled(m->clients); c; c = nexttiled(c->next)) {
+    if (c->bw) {
+      c->oldbw = c->bw;
+      c->bw = 0;
+      remove_border = true;
+    }
 		resize(c, m->wx, m->wy, m->ww - 2 * c->bw, m->wh - 2 * c->bw, False);
+    if (remove_border)
+      resizeclient(c, m->wx, m->wy, m->ww - (2 * c->bw), m->wh - (2 * c->bw));
+  }
 }
 
 void
